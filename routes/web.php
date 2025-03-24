@@ -35,10 +35,10 @@ Route::get('/contach', [HomeController::class, 'index']);
 //Route::get('/contact', [HomeController::class, 'contact']);
 
 
-Route::get('/', function () {
+Route::get('/payment', function () {
     return view('payment');
 });
 
-Route::get('/', function () {
+Route::get('/history', function () {
     return view('history');
 });

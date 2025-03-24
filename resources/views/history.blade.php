@@ -1,44 +1,3 @@
-<!-- <div>
-    Nothing worth having comes easy. - Theodore Roosevelt
-</div> -->
-
-<?php
-//session_start();
-//include '../koneksi/koneksi.php';
-
-// Pastikan pengguna sudah login
-//if (!isset($_SESSION['username'])) {
-//    header("Location: login.php");
-//    exit;
-//}
-
-// Ambil data transaksi pengguna dari database
-$username = $_SESSION['username'];
-$query = "SELECT 
-            sewa.nama_penerima, 
-            sewa.alamat, 
-            sewa.tanggal_penyewaan, 
-            sewa.selesai_penyewaan, 
-            sewa.total_harga, 
-            sewa.metode_pembayaran, 
-            produk.nama_produk, 
-            produk.foto_produk
-          FROM sewa 
-          JOIN produk ON sewa.id_produk = produk.id_produk 
-          WHERE sewa.nama_penerima = ?"; // Menggunakan session untuk nama penerima
-$stmt = $conn->prepare($query);
-$stmt->bind_param("s", $username);
-$stmt->execute();
-$result = $stmt->get_result();
-
-$transaksi = [];
-while ($row = $result->fetch_assoc()) {
-    $transaksi[] = $row;
-}
-
-$stmt->close();
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -273,8 +232,8 @@ $stmt->close();
         </button>
         <!-- Logo -->
         <div class="logo2">
-          <img src="Gambar/RentRail.png" alt="Logo">
-          <h3>Halo  <?= $_SESSION['username']?></h3>
+          <img src="{{ asset('Gambar/RentRail.png') }}" alt="Logo">
+          <h3>Halo {{ Auth::check() ? Auth::user()->username : 'Guest' }}</h3>
         </div>
       </div>
 
@@ -286,14 +245,22 @@ $stmt->close();
             <i class="fas fa-user-circle fa-2x"></i>
           </a>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+            <!-- @if(Auth::check())
             <li class="px-3 py-2 profile-details">
-              <strong><?= $_SESSION['username']?></strong>
-              <p class="email mb-1"><?= $_SESSION['email']?></p>
+              <strong>{{ Auth::user()->username }}</strong>
+              <p class="email mb-1">{{ Auth::user()->email }}</p>
             </li>
             <li><hr class="dropdown-divider"></li>
-            <li><a href="profil.php" class="dropdown-item">Profil Saya</a></li>
-            <li><a href="perbarui_password.php" class="dropdown-item">Perbarui Password</a></li>
-            <li><a class="dropdown-item" href="keluar.php">Keluar</a></li>
+            <li><a href="{{ url('profil') }}" class="dropdown-item">Profil Saya</a></li>
+            <li><a href="{{ url('perbarui_password') }}" class="dropdown-item">Perbarui Password</a></li>
+            <li><a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Keluar</a></li>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                @csrf
+            </form> 
+            @else
+            <li><a href="{{ route('login') }}" class="dropdown-item">Login</a></li>
+            <li><a href="{{ route('register') }}" class="dropdown-item">Register</a></li>
+            @endif 
           </ul>
         </div>
       </div>
@@ -307,12 +274,12 @@ $stmt->close();
             </div>
             <div class="offcanvas-body">
                 <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
-                    <li class="nav-item"><a class="nav-link" aria-current="page" href="home.php"><i class="fas fa-house"></i> Beranda</a></li>
-                    <li class="nav-item"><a class="nav-link" href="katalog.php" ><i class="fas fa-mountain"></i></i> Produk</a></li>
-                    <li class="nav-item"><a class="nav-link" href="keranjang.php"><i class="fas fa-shopping-cart"></i> Keranjang</a></li>
-                    <li class="nav-item"><a class="nav-link" href="menyewa.php"><i class="fas fa-solid fa-person-chalkboard"></i> Cara Menyewa</a></li>
-                    <li class="nav-item"><a class="nav-link" href="hubungi.php"><i class="fas fa-envelope fa-fw"></i> Hubungi Kami</a></li>
-                    <li class="nav-item"><a class="nav-link" href="histori.php"><i class="fas fa-solid fa-receipt"></i> Histori</a></li>
+                    <li class="nav-item"><a class="nav-link" aria-current="page" href="{{ url('home') }}"><i class="fas fa-house"></i> Beranda</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url('katalog') }}" ><i class="fas fa-mountain"></i></i> Produk</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url('keranjang') }}"><i class="fas fa-shopping-cart"></i> Keranjang</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url('menyewa') }}"><i class="fas fa-solid fa-person-chalkboard"></i> Cara Menyewa</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url('hubungi') }}"><i class="fas fa-envelope fa-fw"></i> Hubungi Kami</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url('history') }}"><i class="fas fa-solid fa-receipt"></i> Histori</a></li>
               </ul>
             </div>
           </div>
@@ -321,31 +288,54 @@ $stmt->close();
 
     <div class="container">
         <h1 class="mb-4">Histori Penyewaan</h1>
-        <?php if (empty($transaksi)): ?>
+        
+        @if (session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
+        
+        @php
+            // Get transaction data for the logged-in user
+            if (Auth::check()) {
+                $username = Auth::user()->username;
+                $transaksi = DB::table('sewa')
+                    ->join('produk', 'sewa.id_produk', '=', 'produk.id_produk')
+                    ->where('sewa.nama_penerima', $username)
+                    ->select('sewa.nama_penerima', 'sewa.alamat', 'sewa.tanggal_penyewaan', 
+                            'sewa.selesai_penyewaan', 'sewa.total_harga', 'sewa.metode_pembayaran', 
+                            'produk.nama_produk', 'produk.foto_produk')
+                    ->get();
+            } else {
+                $transaksi = [];
+            }
+        @endphp
+        
+        @if (empty($transaksi) || count($transaksi) === 0)
             <div class="alert alert-info">Belum ada transaksi penyewaan yang tercatat.</div>
-        <?php else: ?>
+        @else
             <div class="row">
-                <?php foreach ($transaksi as $t): ?>
+                @foreach ($transaksi as $t)
                     <div class="col-md-4">
                         <div class="card">
-                            <img src="../assets/foto_produk/<?php echo htmlspecialchars($t['foto_produk']); ?>" alt="Produk">
+                            <img src="{{ asset('assets/foto_produk/' . $t->foto_produk) }}" alt="Produk">
                             <div class="card-body">
-                                <h5 class="card-title"><?php echo htmlspecialchars($t['nama_produk']); ?></h5>
+                                <h5 class="card-title">{{ $t->nama_produk }}</h5>
                                 <p class="card-text">
-                                    <strong>Username:</strong> <?php echo htmlspecialchars($t['nama_penerima']); ?><br>
-                                    <strong>Alamat:</strong> <?php echo htmlspecialchars($t['alamat']); ?><br>
-                                    <strong>Tanggal Sewa:</strong> <?php echo htmlspecialchars($t['tanggal_penyewaan']); ?><br>
-                                    <strong>Selesai Sewa:</strong> <?php echo htmlspecialchars($t['selesai_penyewaan']); ?><br>
-                                    <strong>Total Harga:</strong> Rp<?php echo number_format($t['total_harga'], 0, ',', '.'); ?><br>
-                                    <strong>Metode Pembayaran:</strong> <?php echo htmlspecialchars($t['metode_pembayaran']); ?>
+                                    <strong>Username:</strong> {{ $t->nama_penerima }}<br>
+                                    <strong>Alamat:</strong> {{ $t->alamat }}<br>
+                                    <strong>Tanggal Sewa:</strong> {{ $t->tanggal_penyewaan }}<br>
+                                    <strong>Selesai Sewa:</strong> {{ $t->selesai_penyewaan }}<br>
+                                    <strong>Total Harga:</strong> Rp{{ number_format($t->total_harga, 0, ',', '.') }}<br>
+                                    <strong>Metode Pembayaran:</strong> {{ $t->metode_pembayaran }}
                                 </p>
                             </div>
                         </div>
                     </div>
-                <?php endforeach; ?>
+                @endforeach
             </div>
-        <?php endif; ?>
-        <a href="home.php" class="btn btn-secondary">Kembali ke halaman Utama</a>
+        @endif
+        <a href="{{ url('homepage') }}" class="btn btn-secondary">Kembali ke halaman Utama</a>
     </div>
 
 
@@ -354,8 +344,8 @@ $stmt->close();
     <div class="row">
         <div class="col-md-4">
             <div class="logo">
-                <img src="Gambar/RentRail.png" width="50"/>
-                <span>RentRail.</span>
+                <img src="{{ asset('Gambar/RentRail.png') }}" width="50"/>
+                <span>Festify.</span>
             </div>
             <div class="social-icons">
                 <a href="#"><i class="fab fa-facebook-f"></i></a>
@@ -365,13 +355,13 @@ $stmt->close();
         </div>
         <div class="col-md-4 contact-info">
             <h5>CONTACT US</h5>
-            <p>rentrail@gmail.com</p>
+            <p>festify@gmail.com</p>
             <p>Politeknik Negeri Batam, Batam Center, 24587<br/>Batam, Kepulauan Riau</p>
         </div>
         <div class="col-md-4 subscribe">
             <h5>SUBSCRIBE</h5>
             <p>Klik jika ingin bertanya terkait web kami</p>
-            <a href="hubungi.php"> Kontak</a>
+            <a href="{{ url('hubungi') }}"> Kontak</a>
         </div>
     </div>
     <div class="row">

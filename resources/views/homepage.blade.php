@@ -205,7 +205,7 @@
         object-fit: cover; /* Ensure images maintain aspect ratio while covering the area */
         border-top-left-radius: 8px;
         border-top-right-radius: 8px;
-    }
+    } 
     .card-body {
         padding: 10px;
         text-align: center;

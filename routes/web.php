@@ -1,6 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+//use Illuminate\Support\Facades\Route;
+//use App\Http\Controllers\HomeController036;
+
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AboutUsController;
 use App\Http\Controllers\CartPageController;
@@ -23,11 +25,52 @@ Route::get('/login', [LoginController::class, 'showLogin']);
 Route::get('/payment', [PaymentController::class, 'show']);
 Route::get('/register', [RegisterController::class, 'show']);
 
+//use App\Http\Controllers\HomeController036;
+//use App\Http\Controllers\HomeController;
+//Auth::routes();
 
 
+//::get('/', function () {
+   // return view('welcome');
+//});
 
 
+//Route::get('/', [HomeController036::class, 'index']);
+//Route::get('/contact', [HomeController036::class, 'contact']);
 
+//Route::get('/aboutus', function () {
+  //  return view('aboutus');
+//});
+
+//Route::get('/cartpage', function () {
+    //return view('cartpage');
+//);
+
+//Route::get('/', [HomeController036::class, 'index']);
+//Route::get('/contact', [HomeController036::class, 'contact']);
+
+
+// Route::get('/login', function () {
+//     return view('login'); // Sesuaikan dengan nama file Blade Template di resources/views/
+// });
+
+
+//Route::get('/register', function () {
+  //  return view('register'); // Sesuaikan dengan nama file Blade Template di resources/views/
+//);
+
+// Route::get('/register', function () {
+//     return view('register'); // Sesuaikan dengan nama file Blade Template di resources/views/
+// });
+
+
+//Route::get('/homepage', function () {
+  //  return view('homepage');
+//});
+
+//Route::get('/katalog', function () {
+  //  return view('katalog');
+//});
 
 
 
@@ -57,3 +100,10 @@ Route::get('/register', [RegisterController::class, 'show']);
 // Route::get('/', function () {
 //     return view('welcome');
 // });
+
+
+//Route::get('/', [HomeController::class, 'index']);
+//Route::get('/contact', [HomeController::class, 'contact']);
+
+
+
